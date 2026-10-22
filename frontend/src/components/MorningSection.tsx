@@ -161,11 +161,11 @@ export default function MorningSection({ day, onUpdateDay }: MorningSectionProps
         </div>
 
         {photoUrl ? (
-          <div className="relative rounded-2xl overflow-hidden border border-slate-700/80 group">
+          <div className="relative rounded-3xl overflow-hidden border border-slate-700/80 group max-w-sm mx-auto aspect-[3/4] shadow-2xl bg-black">
             <img
               src={photoUrl}
               alt="Morning Snap"
-              className="w-full h-64 md:h-80 object-cover group-hover:scale-102 transition duration-500"
+              className="w-full h-full object-cover group-hover:scale-102 transition duration-500"
             />
             {/* Watermark overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent flex flex-col justify-end p-5">
