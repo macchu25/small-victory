@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Moon, CheckCircle2, Circle, Trophy, Star, Sparkles, Award, Lock, Check } from 'lucide-react';
+import { Moon, CheckCircle2, Trophy, Star, Sparkles, Award, Lock, Check, Calendar, Heart, Zap } from 'lucide-react';
 import { DayRecord, GoalItem } from '@/types';
 import { api } from '@/lib/api';
 import { sound } from '@/lib/sounds';
@@ -12,11 +12,20 @@ interface EveningSectionProps {
   onUpdateDay: (updated: DayRecord) => void;
 }
 
+const MOOD_RATINGS = [
+  { star: 1, label: 'Thử thách, mai sẽ tốt hơn', emoji: '🌧️' },
+  { star: 2, label: 'Hơi mệt mỏi nhưng đã nỗ lực', emoji: '☕' },
+  { star: 3, label: 'Tạm ổn, có việc cần rút kinh nghiệm', emoji: '🌱' },
+  { star: 4, label: 'Hài lòng và nhẹ nhõm', emoji: '😊' },
+  { star: 5, label: 'Cực kỳ viên mãn, tự hào!', emoji: '🌟' },
+];
+
 export default function EveningSection({ day, onUpdateDay }: EveningSectionProps) {
   const [reflection, setReflection] = useState(day.evening_reflection || '');
   const [mood, setMood] = useState(day.evening_mood || 4);
   const [isDayClosed, setIsDayClosed] = useState(day.is_day_closed || false);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasSavedDraft, setHasSavedDraft] = useState(false);
 
   React.useEffect(() => {
     setReflection(day.evening_reflection || '');
@@ -33,7 +42,6 @@ export default function EveningSection({ day, onUpdateDay }: EveningSectionProps
     const nextCompleted = !goal.completed;
     if (nextCompleted) {
       sound.playCheck();
-      // If this was the last goal to reach 100%, trigger celebration fanfare & confetti!
       if (completedCount + 1 === totalCount) {
         sound.playFanfare();
         fireConfetti();
@@ -65,113 +73,134 @@ export default function EveningSection({ day, onUpdateDay }: EveningSectionProps
       setIsDayClosed(closed);
       const updated = await api.submitEveningReview(day.date, reflection, mood, closed);
       onUpdateDay(updated);
+      if (!closeDay) {
+        setHasSavedDraft(true);
+        setTimeout(() => setHasSavedDraft(false), 2000);
+      }
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      {/* Evening Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900/30 via-slate-900 to-slate-950 border border-indigo-500/25 p-6 md:p-8">
-        <div className="absolute -top-12 -right-12 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
+      {/* Evening Hero Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-slate-950 border border-indigo-500/25 p-5 sm:p-7 shadow-2xl">
+        <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-bl from-indigo-500/20 via-purple-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <Moon className="w-7 h-7" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 p-0.5 shadow-lg shadow-indigo-500/25 flex items-center justify-center">
+              <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-indigo-400">
+                <Moon className="w-6 h-6 animate-pulse" />
+              </div>
             </div>
             <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">Tổng Kết Cuối Ngày</span>
-              <h2 className="text-xl md:text-2xl font-bold text-white">Kiểm Tra Mục Tiêu & Suy Ngẫm</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Lắng Đọng Cuối Ngày</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                  {day.date}
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Kiểm Tra Mục Tiêu & Suy Ngẫm</h2>
             </div>
           </div>
 
-          {/* Progress Indicator */}
-          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2 flex items-center gap-3 self-start md:self-auto">
+          {/* Progress Ring / Pill */}
+          <div className="bg-slate-950/80 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-2.5 flex items-center gap-3.5 self-start md:self-auto shadow-lg">
             <div className="text-right">
-              <p className="text-xs text-slate-400">Tiến độ ngày</p>
-              <p className="text-sm font-bold text-white">
-                {completedCount}/{totalCount} mục tiêu ({progressPercent}%)
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Hoàn thành</span>
+              <p className="text-sm font-black text-white">
+                {completedCount}/{totalCount} việc ({progressPercent}%)
               </p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center">
-              {progressPercent === 100 ? (
-                <Trophy className="w-6 h-6 text-amber-400 animate-bounce" />
-              ) : (
-                <span className="text-xs font-bold text-indigo-400">{progressPercent}%</span>
-              )}
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-md flex items-center justify-center">
+              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                {progressPercent === 100 ? (
+                  <Trophy className="w-5 h-5 text-amber-400 animate-bounce" />
+                ) : (
+                  <span className="text-xs font-black text-indigo-400">{progressPercent}%</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-full bg-slate-800/80 rounded-full h-3 overflow-hidden p-0.5 border border-slate-700/50 mb-2">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-400 transition-all duration-500"
-            style={{ width: `${progressPercent}%` }}
-          />
+        {/* Dynamic Multi-stop Progress Bar */}
+        <div className="relative z-10 space-y-2">
+          <div className="w-full bg-slate-950 rounded-full h-3.5 overflow-hidden p-0.5 border border-white/10 shadow-inner">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-400 transition-all duration-700 ease-out shadow-lg"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-xs text-slate-400">
+            <span>
+              {progressPercent === 100
+                ? '🎉 Trọn vẹn 100%! Ngày hôm nay là một thắng lợi vẻ vang của bạn!'
+                : progressPercent >= 60
+                ? '🔥 Phong độ rất tốt! Bạn đã hoàn thành phần lớn các việc quan trọng.'
+                : '🌱 Mỗi nỗ lực nhỏ đều đáng tự hào. Hãy tích chọn những việc bạn đã làm được.'}
+            </span>
+          </div>
         </div>
-        <p className="text-xs text-slate-400">
-          {progressPercent === 100
-            ? '🎉 Xuất sắc! Bạn đã hoàn thành 100% mục tiêu đã đề ra hôm nay!'
-            : progressPercent >= 70
-            ? '🔥 Rất tuyệt vời! Bạn đã hoàn thành phần lớn các việc quan trọng!'
-            : '🌱 Mỗi nỗ lực đều đáng trân trọng. Hãy tích chọn các việc bạn đã làm được.'}
-        </p>
       </div>
 
-      {/* Checklist Hiện Lại List Cuối Ngày */}
-      <div className="rounded-3xl bg-slate-900/60 border border-slate-800 p-6">
+      {/* Checklist Hiện Lại List Mục Tiêu */}
+      <div className="rounded-3xl bg-slate-900/60 border border-white/10 p-5 sm:p-7 shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-bold text-white text-base md:text-lg flex items-center gap-2">
+            <h3 className="font-bold text-white text-base sm:text-lg flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-indigo-400" /> Danh Sách Mục Tiêu Đã Đặt Sáng Nay
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Tích chọn vào mục tiêu để ghi nhận thành quả ngày hôm nay
+              Chạm vào mục tiêu để đánh dấu hoàn thành và kích hoạt pháo hoa ăn mừng 🎆
             </p>
           </div>
         </div>
 
         {goals.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {goals.map((goal) => {
               const isDone = goal.completed;
               return (
                 <div
                   key={goal.id}
                   onClick={() => handleToggleGoal(goal)}
-                  className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
+                  className={`group flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all duration-200 select-none ${
                     isDone
-                      ? 'bg-indigo-950/25 border-indigo-500/40 shadow-sm'
-                      : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                      ? 'bg-indigo-950/30 border-indigo-500/40 shadow-sm'
+                      : 'bg-slate-950/70 border-white/5 hover:border-white/20 hover:bg-slate-950'
                   }`}
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <button
                       type="button"
-                      className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all ${
+                      className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all shrink-0 ${
                         isDone
-                          ? 'bg-indigo-500 border-indigo-400 text-slate-950 shadow-md shadow-indigo-500/25'
-                          : 'border-slate-700 bg-slate-900 hover:border-indigo-400'
+                          ? 'bg-gradient-to-tr from-indigo-500 to-purple-500 border-indigo-400 text-slate-950 shadow-md shadow-indigo-500/30'
+                          : 'border-slate-700 bg-slate-900 group-hover:border-indigo-400'
                       }`}
                     >
                       {isDone ? <Check className="w-4 h-4 stroke-[3]" /> : null}
                     </button>
 
                     <div>
-                      <p className={`text-sm md:text-base font-medium transition ${isDone ? 'line-through text-slate-400' : 'text-slate-100'}`}>
+                      <p
+                        className={`text-sm sm:text-base font-semibold transition ${
+                          isDone ? 'line-through text-slate-500' : 'text-slate-100'
+                        }`}
+                      >
                         {goal.text}
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[11px] font-semibold text-slate-400">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                           {goal.priority === 'must_do' && '🔥 Quan trọng nhất'}
                           {goal.priority === 'should' && '⚡ Cần làm'}
                           {goal.priority === 'bonus' && '🌱 Mở rộng'}
                         </span>
                         {isDone && goal.completed_at && (
-                          <span className="text-[11px] text-indigo-300">
+                          <span className="text-[10px] text-indigo-300 font-medium">
                             • Xong lúc {new Date(goal.completed_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         )}
@@ -180,7 +209,7 @@ export default function EveningSection({ day, onUpdateDay }: EveningSectionProps
                   </div>
 
                   {isDone && (
-                    <span className="px-2.5 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-semibold flex items-center gap-1">
+                    <span className="px-2.5 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-bold flex items-center gap-1 shrink-0 animate-fadeIn">
                       <Sparkles className="w-3.5 h-3.5" /> Hoàn thành
                     </span>
                   )}
@@ -189,73 +218,78 @@ export default function EveningSection({ day, onUpdateDay }: EveningSectionProps
             })}
           </div>
         ) : (
-          <div className="text-center py-10 bg-slate-950/40 rounded-2xl border border-dashed border-slate-800 text-slate-500 text-sm">
+          <div className="text-center py-10 bg-slate-950/40 rounded-2xl border border-dashed border-white/10 text-slate-500 text-sm">
             Chưa có mục tiêu nào được đặt cho ngày này. Hãy quay lại tab Buổi Sáng để thêm mục tiêu!
           </div>
         )}
       </div>
 
       {/* Evening Reflection & Mood */}
-      <div className="rounded-3xl bg-slate-900/60 border border-slate-800 p-6 space-y-5">
-        <h3 className="font-bold text-white text-base md:text-lg flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-400" /> Tự Suy Ngẫm Cuối Ngày
+      <div className="rounded-3xl bg-slate-900/60 border border-white/10 p-5 sm:p-7 shadow-xl space-y-6">
+        <h3 className="font-bold text-white text-base sm:text-lg flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-purple-400" /> Tự Suy Ngẫm & Chấm Điểm Ngày
         </h3>
 
-        {/* Mood Stars */}
+        {/* Mood Stars Rating */}
         <div>
-          <label className="block text-xs font-medium text-slate-300 mb-2">Đánh giá độ hài lòng hôm nay:</label>
-          <div className="flex items-center gap-2">
+          <label className="block text-xs font-semibold text-slate-200 mb-2">Đánh giá độ hài lòng hôm nay:</label>
+          <div className="flex flex-wrap items-center gap-2">
             {[1, 2, 3, 4, 5].map((s) => (
               <button
                 key={s}
+                type="button"
                 onClick={() => handleMoodSelect(s)}
                 className={`p-2 rounded-xl transition ${
-                  mood >= s ? 'text-amber-400 bg-amber-500/10 scale-105' : 'text-slate-600 bg-slate-800/50 hover:text-slate-400'
+                  mood >= s ? 'text-amber-400 bg-amber-500/10 scale-105' : 'text-slate-600 bg-slate-950 hover:text-slate-400'
                 }`}
               >
                 <Star className="w-6 h-6 fill-current" />
               </button>
             ))}
-            <span className="text-xs text-slate-400 ml-2 font-medium">
-              {mood === 5 && '🌟 Cực kỳ viên mãn!'}
-              {mood === 4 && '😊 Hài lòng và nhẹ nhõm'}
-              {mood === 3 && '😐 Tạm ổn, còn việc cần cố gắng'}
-              {mood === 2 && '😔 Khá mệt mỏi nhưng đã nỗ lực'}
-              {mood === 1 && '🌧️ Ngày thử thách, mai sẽ tốt hơn'}
+            <span className="text-xs sm:text-sm font-semibold text-amber-300 ml-1">
+              {MOOD_RATINGS.find((m) => m.star === mood)?.emoji} {MOOD_RATINGS.find((m) => m.star === mood)?.label}
             </span>
           </div>
         </div>
 
         {/* Reflection Note */}
         <div>
-          <label className="block text-xs font-medium text-slate-300 mb-2">
-            Hôm nay bạn hài lòng nhất điều gì? Có bài học gì cần đúc kết?
+          <label className="block text-xs font-semibold text-slate-200 mb-2">
+            Hôm nay điều gì làm bạn hài lòng nhất? Có bài học gì đúc kết cho ngày mai?
           </label>
           <textarea
             rows={3}
             value={reflection}
             onChange={(e) => setReflection(e.target.value)}
-            placeholder="Hôm nay mình vui vì đã kiên trì giải quyết xong việc... Bài học là nên chuẩn bị sớm hơn..."
-            className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition resize-none shadow-inner"
+            placeholder="Ví dụ: Hôm nay mình vui vì đã giữ lời hứa với bản thân, hoàn thành đúng deadline... Ngày mai sẽ bắt đầu sớm hơn 15 phút..."
+            className="w-full bg-slate-950/80 border border-white/10 focus:border-indigo-500 rounded-2xl p-4 text-sm sm:text-base text-slate-100 placeholder-slate-500 focus:outline-none transition resize-none shadow-inner leading-relaxed"
           />
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2 border-t border-white/5">
+          {hasSavedDraft && (
+            <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1 animate-fadeIn mr-auto">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Đã lưu bản nháp suy ngẫm
+            </span>
+          )}
+
           <button
+            type="button"
             onClick={() => handleSaveEvening(false)}
             disabled={isSaving}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs md:text-sm transition"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs sm:text-sm transition"
           >
-            Lưu bản nháp suy ngẫm
+            Lưu bản nháp
           </button>
 
           <button
+            type="button"
             onClick={() => handleSaveEvening(true)}
             disabled={isSaving}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500 text-slate-950 font-bold text-xs md:text-sm hover:brightness-110 shadow-lg shadow-indigo-500/25 transition flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500 text-slate-950 font-black text-xs sm:text-sm hover:brightness-110 active:scale-95 shadow-lg shadow-indigo-500/25 transition flex items-center justify-center gap-2"
           >
-            <Lock className="w-4 h-4" />
+            <Lock className="w-4 h-4 stroke-[2.5]" />
             {isDayClosed ? 'Đã Khóa & Hoàn Thành Ngày' : 'Đóng Dấu Hoàn Thành Ngày 🏆'}
           </button>
         </div>

@@ -9,7 +9,7 @@ import StatsModal from '@/components/StatsModal';
 import { DayRecord, StatsResponse, WinRecord } from '@/types';
 import { api } from '@/lib/api';
 import { sound } from '@/lib/sounds';
-import { Sun, Moon, Trophy } from 'lucide-react';
+import { Sun, Moon, Trophy, Sparkles } from 'lucide-react';
 
 export default function Home() {
   const getTodayStr = () => new Date().toISOString().split('T')[0];
@@ -71,7 +71,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans pb-24 md:pb-12 selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="min-h-screen bg-[#07090e] text-slate-100 flex flex-col font-sans pb-28 md:pb-12 selection:bg-amber-500/30 selection:text-amber-200">
       {/* Top Header */}
       <Header
         selectedDate={selectedDate}
@@ -84,23 +84,23 @@ export default function Home() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 md:py-8">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-5 sm:py-7">
         {/* Sync Indicator (subtle pill) */}
         {isSyncing && (
-          <div className="flex items-center justify-center gap-2 mb-4 text-xs text-amber-400/80 animate-pulse">
+          <div className="flex items-center justify-center gap-2 mb-3 text-xs text-amber-400/90 font-medium animate-pulse">
             <div className="w-2 h-2 rounded-full bg-amber-400" />
-            <span>Đang đồng bộ với máy chủ...</span>
+            <span>Đang đồng bộ dữ liệu với máy chủ...</span>
           </div>
         )}
 
-        {/* Navigation Tabs (Desktop / Tablet) */}
-        <div className="hidden sm:flex items-center justify-center p-1.5 bg-slate-900/90 border border-slate-800 rounded-2xl max-w-md mx-auto mb-8 shadow-inner">
+        {/* Navigation Tabs (Desktop / Tablet Segmented Control) */}
+        <div className="hidden sm:flex items-center justify-center p-1.5 bg-slate-900/90 border border-white/10 rounded-2xl max-w-lg mx-auto mb-7 shadow-xl backdrop-blur-xl">
           <button
             onClick={() => handleTabChange('morning')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl text-xs md:text-sm font-bold transition-all duration-300 ${
               activeTab === 'morning'
-                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/25 scale-102'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
             <Sun className="w-4 h-4" />
@@ -109,10 +109,10 @@ export default function Home() {
 
           <button
             onClick={() => handleTabChange('evening')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl text-xs md:text-sm font-bold transition-all duration-300 ${
               activeTab === 'evening'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25 scale-102'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
             <Moon className="w-4 h-4" />
@@ -121,10 +121,10 @@ export default function Home() {
 
           <button
             onClick={() => handleTabChange('wins')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl text-xs md:text-sm font-bold transition-all duration-300 ${
               activeTab === 'wins'
-                ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-slate-950 shadow-md shadow-rose-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-slate-950 shadow-lg shadow-rose-500/25 scale-102'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
             <Trophy className="w-4 h-4" />
@@ -132,7 +132,7 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Content Views - Never blocked by loading */}
+        {/* Content Views */}
         <div>
           {activeTab === 'morning' && (
             <MorningSection
@@ -158,12 +158,14 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Mobile Bottom Dock Bar */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800/80 px-4 py-2 flex items-center justify-around">
+      {/* Mobile Bottom Dock Bar (Glassmorphic Thumb Reach) */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/90 backdrop-blur-2xl border-t border-white/10 px-4 py-2 flex items-center justify-around shadow-2xl">
         <button
           onClick={() => handleTabChange('morning')}
-          className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-xl transition ${
-            activeTab === 'morning' ? 'text-amber-400 font-bold scale-105' : 'text-slate-500'
+          className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-2xl transition-all duration-300 ${
+            activeTab === 'morning'
+              ? 'text-amber-400 font-extrabold scale-110 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+              : 'text-slate-500 hover:text-slate-300'
           }`}
         >
           <Sun className="w-5 h-5" />
@@ -172,8 +174,10 @@ export default function Home() {
 
         <button
           onClick={() => handleTabChange('evening')}
-          className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-xl transition ${
-            activeTab === 'evening' ? 'text-indigo-400 font-bold scale-105' : 'text-slate-500'
+          className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-2xl transition-all duration-300 ${
+            activeTab === 'evening'
+              ? 'text-indigo-400 font-extrabold scale-110 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]'
+              : 'text-slate-500 hover:text-slate-300'
           }`}
         >
           <Moon className="w-5 h-5" />
@@ -182,8 +186,10 @@ export default function Home() {
 
         <button
           onClick={() => handleTabChange('wins')}
-          className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-xl transition ${
-            activeTab === 'wins' ? 'text-rose-400 font-bold scale-105' : 'text-slate-500'
+          className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-2xl transition-all duration-300 ${
+            activeTab === 'wins'
+              ? 'text-rose-400 font-extrabold scale-110 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+              : 'text-slate-500 hover:text-slate-300'
           }`}
         >
           <Trophy className="w-5 h-5" />
