@@ -1,0 +1,32 @@
+{
+  "name": "Small Victory - Khởi Đầu & Chiến Thắng Nhỏ",
+  "short_name": "SmallVictory",
+  "description": "Ghi mục đích đầu ngày, kiểm tra hoàn thành cuối ngày, chụp ảnh khởi đầu và nhật ký chiến thắng nhỏ mỗi ngày.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090d16",
+  "theme_color": "#0f172a",
+  "lang": "vi",
+  "categories": ["productivity", "lifestyle", "health"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
