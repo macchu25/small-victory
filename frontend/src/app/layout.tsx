@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import RegisterServiceWorker from "@/components/RegisterServiceWorker";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -44,20 +45,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full bg-slate-950 text-slate-100 font-sans">
         {children}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(
-                    function(reg) { console.log('[PWA] ServiceWorker registered:', reg.scope); },
-                    function(err) { console.log('[PWA] ServiceWorker registration failed:', err); }
-                  );
-                });
-              }
-            `,
-          }}
-        />
+        <RegisterServiceWorker />
       </body>
     </html>
   );
