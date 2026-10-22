@@ -14,13 +14,23 @@ import { Sun, Moon, Trophy } from 'lucide-react';
 export default function Home() {
   const getTodayStr = () => new Date().toISOString().split('T')[0];
 
+  const createDefaultDay = (date: string): DayRecord => ({
+    date,
+    morning_intention: '',
+    energy: 3,
+    goals: [],
+    evening_reflection: '',
+    evening_mood: 3,
+    is_day_closed: false,
+  });
+
   const [selectedDate, setSelectedDate] = useState<string>(getTodayStr());
   const [activeTab, setActiveTab] = useState<'morning' | 'evening' | 'wins'>('morning');
-  const [dayData, setDayData] = useState<DayRecord | null>(null);
+  const [dayData, setDayData] = useState<DayRecord>(() => createDefaultDay(getTodayStr()));
   const [wins, setWins] = useState<WinRecord[]>([]);
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Auto detect morning or evening on initial load
   useEffect(() => {
@@ -38,18 +48,20 @@ export default function Home() {
   }, [selectedDate]);
 
   const loadData = async (date: string) => {
-    setIsLoading(true);
+    setIsSyncing(true);
     try {
       const [fetchedDay, fetchedWins, fetchedStats] = await Promise.all([
         api.getDay(date),
         api.getWins(date),
         api.getStats(),
       ]);
-      setDayData(fetchedDay);
-      setWins(fetchedWins);
-      setStats(fetchedStats);
+      if (fetchedDay) setDayData(fetchedDay);
+      if (fetchedWins) setWins(fetchedWins);
+      if (fetchedStats) setStats(fetchedStats);
+    } catch (e) {
+      console.warn('Sync notice:', e);
     } finally {
-      setIsLoading(false);
+      setIsSyncing(false);
     }
   };
 
@@ -63,13 +75,24 @@ export default function Home() {
       {/* Top Header */}
       <Header
         selectedDate={selectedDate}
-        onSelectDate={(newDate) => setSelectedDate(newDate)}
+        onSelectDate={(newDate) => {
+          setSelectedDate(newDate);
+          setDayData(createDefaultDay(newDate));
+        }}
         streak={stats?.streak || 0}
         onOpenStats={() => setIsStatsOpen(true)}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 md:py-8">
+        {/* Sync Indicator (subtle pill) */}
+        {isSyncing && (
+          <div className="flex items-center justify-center gap-2 mb-4 text-xs text-amber-400/80 animate-pulse">
+            <div className="w-2 h-2 rounded-full bg-amber-400" />
+            <span>Đang đồng bộ với máy chủ...</span>
+          </div>
+        )}
+
         {/* Navigation Tabs (Desktop / Tablet) */}
         <div className="hidden sm:flex items-center justify-center p-1.5 bg-slate-900/90 border border-slate-800 rounded-2xl max-w-md mx-auto mb-8 shadow-inner">
           <button
@@ -109,37 +132,30 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Content Views */}
-        {isLoading || !dayData ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400 space-y-3">
-            <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs">Đang đồng bộ dữ liệu...</p>
-          </div>
-        ) : (
-          <div>
-            {activeTab === 'morning' && (
-              <MorningSection
-                day={dayData}
-                onUpdateDay={(updated) => setDayData(updated)}
-              />
-            )}
+        {/* Content Views - Never blocked by loading */}
+        <div>
+          {activeTab === 'morning' && (
+            <MorningSection
+              day={dayData}
+              onUpdateDay={(updated) => setDayData(updated)}
+            />
+          )}
 
-            {activeTab === 'evening' && (
-              <EveningSection
-                day={dayData}
-                onUpdateDay={(updated) => setDayData(updated)}
-              />
-            )}
+          {activeTab === 'evening' && (
+            <EveningSection
+              day={dayData}
+              onUpdateDay={(updated) => setDayData(updated)}
+            />
+          )}
 
-            {activeTab === 'wins' && (
-              <WinsSection
-                wins={wins}
-                currentDate={selectedDate}
-                onRefreshWins={() => loadData(selectedDate)}
-              />
-            )}
-          </div>
-        )}
+          {activeTab === 'wins' && (
+            <WinsSection
+              wins={wins}
+              currentDate={selectedDate}
+              onRefreshWins={() => loadData(selectedDate)}
+            />
+          )}
+        </div>
       </main>
 
       {/* Mobile Bottom Dock Bar */}
