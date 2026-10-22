@@ -41,8 +41,8 @@ func ConnectDB(cfg *config.Config) (*DB, error) {
 	daysCol := dbInstance.Collection("days")
 	winsCol := dbInstance.Collection("wins")
 
-	// Create Indexes
-	initIndexes(context.Background(), daysCol, winsCol)
+	// Create Indexes asynchronously so it doesn't block server startup
+	go initIndexes(daysCol, winsCol)
 
 	return &DB{
 		Client:   client,
@@ -52,7 +52,10 @@ func ConnectDB(cfg *config.Config) (*DB, error) {
 	}, nil
 }
 
-func initIndexes(ctx context.Context, daysCol, winsCol *mongo.Collection) {
+func initIndexes(daysCol, winsCol *mongo.Collection) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
 	// Index date uniquely on days collection
 	dayIndex := mongo.IndexModel{
 		Keys:    bson.M{"date": 1},
